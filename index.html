@@ -8,10 +8,42 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/lua.min.js"></script>
+
   <style>
-    pre code.hljs { padding: 1rem; border-radius: 0.75rem; overflow-x: auto; background: #0d1117 !important; }
-    body { background: linear-gradient(to bottom, #0f0f17, #000000); }
-    .hljs { background: #0d1117 !important; color: #c9d1d9 !important; }
+    :root {
+      --bg0: #05030b;
+      --bg1: #0b0616;
+      --panel: rgba(12, 8, 24, .72);
+      --stroke: rgba(196, 181, 253, .18); /* violet */
+      --glow: rgba(168, 85, 247, .28); /* purple glow */
+    }
+
+    body {
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(168,85,247,.22), transparent 60%),
+        radial-gradient(900px 500px at 85% 20%, rgba(139,92,246,.18), transparent 55%),
+        linear-gradient(to bottom, var(--bg1), var(--bg0));
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 40px var(--glow);
+      backdrop-filter: blur(10px);
+    }
+
+    pre code.hljs {
+      padding: 1rem;
+      border-radius: 1rem;
+      overflow-x: auto;
+      background: rgba(5,3,11,.75) !important;
+      border: 1px solid var(--stroke);
+    }
+
+    .hljs {
+      background: transparent !important;
+      color: #e5e7eb !important;
+    }
   </style>
 </head>
 <body class="text-gray-200 min-h-screen p-6">
@@ -20,15 +52,32 @@
     <p class="text-center text-gray-400 mb-8">WeAreDevs • Prometheus • LuaObfuscator + Env Logger by Cypher Scripts (2026)</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Panel izquierdo - Input -->
       <div>
         <div class="flex justify-between mb-2 items-center">
           <h2 class="font-semibold text-lg">Código Obfuscado</h2>
-          <button onclick="detectType()" class="text-xs bg-gray-800 hover:bg-gray-700 px-4 py-1.5 rounded-md border border-gray-600">🔍 Detectar</button>
+          <div class="flex gap-2">
+            <button onclick="document.getElementById('fileInput').click()"
+              class="text-xs bg-violet-600 hover:bg-violet-500 px-4 py-1.5 rounded-md border border-violet-300/20">
+              📁 Importar
+            </button>
+            <button onclick="detectType()"
+              class="text-xs bg-black/40 hover:bg-black/60 px-4 py-1.5 rounded-md border border-violet-300/20">
+              🔍 Detectar
+            </button>
+          </div>
         </div>
-        <pre><code id="input-highlight" class="language-lua h-96 overflow-auto bg-gray-900/80 border border-gray-700 rounded-xl p-4 whitespace-pre-wrap break-words"></code></pre>
-        <textarea id="input" class="hidden" placeholder="Pega aquí tu script Lua obfuscado..."></textarea>
+
+        <textarea id="input"
+          class="glass w-full h-96 overflow-auto rounded-2xl p-4 whitespace-pre-wrap break-words font-mono text-sm text-purple-100 placeholder:text-purple-200/40"
+          placeholder="Pega aquí tu script Lua obfuscado..."></textarea>
+
+        <pre class="mt-3"><code id="input-highlight" class="language-lua rounded-2xl"></code></pre>
+
+        <input id="fileInput" type="file" accept=".lua,.txt,.log,text/plain" class="hidden" />
       </div>
 
+      <!-- Panel derecho - Output -->
       <div>
         <div class="flex justify-between mb-2 items-center">
           <h2 class="font-semibold text-lg">Resultado / Logger Preparado</h2>
@@ -38,8 +87,11 @@
             <button onclick="sendToGrok()" class="text-xs bg-indigo-700 hover:bg-indigo-600 px-4 py-1.5 rounded-md">🤖 Enviar a Grok</button>
           </div>
         </div>
-        <pre><code id="output-highlight" class="language-lua h-96 overflow-auto bg-gray-900/80 border border-gray-700 rounded-xl p-4 whitespace-pre-wrap break-words"></code></pre>
-        <textarea id="output" class="hidden" readonly></textarea>
+
+        <textarea id="output" readonly
+          class="glass w-full h-96 overflow-auto rounded-2xl p-4 whitespace-pre-wrap break-words font-mono text-sm text-purple-100"></textarea>
+
+        <pre class="mt-3"><code id="output-highlight" class="language-lua rounded-2xl"></code></pre>
       </div>
     </div>
 
@@ -55,7 +107,7 @@
     <div id="status" class="mt-8 text-center text-lg font-mono"></div>
 
     <div class="mt-12 text-center text-sm text-gray-500 max-w-3xl mx-auto">
-      Flujo recomendado: Pega script → Preparar con Env Logger → Ejecuta en exploit → Pega logged.txt → Beautify → Descargar o Enviar a Grok
+      Ejemplo: Pega script → Preparar con Env Logger → Ejecuta en exploit → Pega logged.txt → Beautify → Descargar o Enviar a Grok
     </div>
   </div>
 
@@ -72,7 +124,7 @@ local function isuilib()
 end
 
 local function formatlog(text)
- if type(text) \~= 'string' then
+ if type(text) \\~= 'string' then
   error('Bad agrument #1 to formatlog "string" expected, got: '..type(text))
   return
  end
@@ -84,7 +136,7 @@ local function tblformat(tbl, depth)
  local res = ''
  local first = true
  if depth > 5 then return 'too big to display' end
- if type(tbl) \~= 'table' then
+ if type(tbl) \\~= 'table' then
   res = '"'..tostring(tbl)..'"'
   if res == '"nil"' then
    res = ''
@@ -305,7 +357,7 @@ hookmetamethod(game,'__index',newcclosure(function(self, v, ...)
  return oldindex(self, v, ...)
 end))
 hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
- if checkcaller() and not isuilib() and getnamecallmethod() \~= 'GetFullName' then
+ if checkcaller() and not isuilib() and getnamecallmethod() \\~= 'GetFullName' then
   local instance = tostring(self)
   if type(instance) == 'Instance' then
    instance = oldnamecall(instance, 'GetFullName')
@@ -439,22 +491,28 @@ print("[Logger] All API calls will be logged to logged.txt")
 
     function updateHighlight(id, content) {
       const el = document.getElementById(id);
-      el.textContent = content;
+      el.textContent = content || "";
       hljs.highlightElement(el);
     }
 
-    function syncTextareas() {
-      document.getElementById('input').value = document.getElementById('input-highlight').textContent;
-      document.getElementById('output').value = document.getElementById('output-highlight').textContent;
+    function syncFromTextareas() {
+      const inVal  = document.getElementById('input').value;
+      const outVal = document.getElementById('output').value;
+      updateHighlight("input-highlight", inVal);
+      updateHighlight("output-highlight", outVal);
     }
 
-    function setStatus(msg, color = "emerald") {
-      document.getElementById("status").innerHTML = `<span class="text-\( {color}-400 font-semibold"> \){msg}</span>`;
-      setTimeout(() => document.getElementById("status").innerHTML = "", 5000);
+    function setStatus(msg, color = "violet") {
+      document.getElementById("status").innerHTML =
+        `<span class="text-\( {color}-300 font-semibold"> \){msg}</span>`;
+      setTimeout(() => (document.getElementById("status").innerHTML = ""), 5000);
     }
+
+    // ────────────────────────────────────────────────
+    // Funciones principales (todas leen de .value ahora)
+    // ────────────────────────────────────────────────
 
     function beautify() {
-      syncTextareas();
       let code = document.getElementById("output").value || document.getElementById("input").value;
       if (!code.trim()) return setStatus("Nada para beautify", "gray");
 
@@ -486,14 +544,13 @@ print("[Logger] All API calls will be logged to logged.txt")
         result.push(indented);
       });
 
-      const beautified = result.join('\\n');
+      const beautified = result.join('\n');
       document.getElementById("output").value = beautified;
-      updateHighlight("output-highlight", beautified);
+      syncFromTextareas();
       setStatus("Beautify mejorado aplicado ✓", "amber");
     }
 
     function downloadOutput() {
-      syncTextareas();
       const content = document.getElementById("output").value.trim();
       if (!content) return setStatus("Nada para descargar", "red");
 
@@ -508,19 +565,17 @@ print("[Logger] All API calls will be logged to logged.txt")
     }
 
     function prepareWithEnvLogger() {
-      syncTextareas();
       const obfuscated = document.getElementById("input").value.trim();
       if (!obfuscated) return setStatus("Pega el script obfuscado primero", "red");
 
       const full = ENV_LOGGER + `loadstring([[\n${obfuscated}\n]])()\n`;
 
       document.getElementById("output").value = full;
-      updateHighlight("output-highlight", full);
+      syncFromTextareas();
       setStatus("Logger preparado! Ejecuta en tu exploit → pega logged.txt aquí después", "emerald");
     }
 
     function detectType() {
-      syncTextareas();
       const code = document.getElementById("input").value.trim();
       if (!code) return setStatus("Nada para detectar", "gray");
       let type = "Custom / Desconocido";
@@ -530,49 +585,44 @@ print("[Logger] All API calls will be logged to logged.txt")
     }
 
     function deobfLuaObfuscator() {
-      syncTextareas();
       let code = document.getElementById("input").value;
       if (!code) return setStatus("Nada para procesar", "red");
 
-      code = code.replace(/string\\.char\\s*\\(\\s*table\\.unpack\\s*\\(\\s*\\{([\\d\\s,]+)\\}\\s*\\)\\s*\\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
-      code = code.replace(/string\\.char\\s*\\(\\s*(\\d+(?:,\\s*\\d+)*)\\s*\\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
+      code = code.replace(/string\\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
+      code = code.replace(/string\\.char\s*\(\s*(\d+(?:,\s*\d+)*)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
 
       document.getElementById("output").value = code;
-      updateHighlight("output-highlight", code);
+      syncFromTextareas();
       beautify();
       setStatus("LuaObfuscator strings desencriptadas ✓", "blue");
     }
 
     function deobfPrometheus() {
-      syncTextareas();
       let code = document.getElementById("input").value;
       if (!code) return setStatus("Nada para procesar", "red");
 
-      code = code.replace(/--\\s*PHASE_BOUNDARY[^\\n]*\\n?/g, '');
-      code = code.replace(/if\\s+(getfenv|debug\\.getinfo|synapse|krnl|identifyexecutor)[^\\n]*\\n?/g, '-- [ANTI-DEBUG REMOVIDO]\\n');
+      code = code.replace(/--\s*PHASE_BOUNDARY[^\n]*\n?/g, '');
+      code = code.replace(/if\s+(getfenv|debug\.getinfo|synapse|krnl|identifyexecutor)[^\n]*\n?/g, '-- [ANTI-DEBUG REMOVIDO]\n');
 
       document.getElementById("output").value = code;
-      updateHighlight("output-highlight", code);
+      syncFromTextareas();
       beautify();
       setStatus("Prometheus/WeAreDevs limpieza básica ✓", "rose");
     }
 
     function deobfAll() {
-      syncTextareas();
       const code = document.getElementById("input").value.trim();
       if (!code) return setStatus("Ingresa código primero", "red");
 
-      if (/LuaObfuscator|string\\.char|table\\.unpack/.test(code)) {
+      if (/LuaObfuscator|string\.char|table\.unpack/.test(code)) {
         deobfLuaObfuscator();
       } else {
         deobfPrometheus();
       }
-      beautify();
       setStatus("Deobf automático completado 🔥", "violet");
     }
 
     function copyOutput() {
-      syncTextareas();
       const out = document.getElementById("output");
       if (!out.value.trim()) return setStatus("Nada para copiar", "gray");
       navigator.clipboard.writeText(out.value).then(() => {
@@ -581,7 +631,6 @@ print("[Logger] All API calls will be logged to logged.txt")
     }
 
     function sendToGrok() {
-      syncTextareas();
       let text = document.getElementById("output").value.trim();
       if (!text) return setStatus("No hay contenido", "red");
 
@@ -598,7 +647,7 @@ Tarea:
 
 Log:
 \`\`\`lua
-\( {text.slice(0, 7500)} \){text.length > 7500 ? '\\n\\n-- [truncado por longitud]' : ''}
+\( {text.slice(0, 7500)} \){text.length > 7500 ? '\n\n-- [truncado por longitud]' : ''}
 \`\`\``
         : `Analiza y deobfusca este script Lua pre-procesado (strings desencriptadas + beautify). Renombra vars, quita junk, reconstruye lógica si flattened.
 
@@ -615,18 +664,44 @@ ${text.slice(0, 7500)}
     function clearAll() {
       document.getElementById("input").value = "";
       document.getElementById("output").value = "";
-      updateHighlight("input-highlight", "");
-      updateHighlight("output-highlight", "");
+      syncFromTextareas();
       setStatus("Limpio", "gray");
     }
 
-    // Sincronizar al escribir en highlight (contenteditable)
-    document.getElementById('input-highlight').contentEditable = true;
-    document.getElementById('input-highlight').addEventListener('input', syncTextareas);
+    // ────────────────────────────────────────────────
+    // Importar archivo
+    // ────────────────────────────────────────────────
+    document.getElementById("fileInput").addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const MAX_MB = 5;
+      if (file.size > MAX_MB * 1024 * 1024) {
+        setStatus(`Archivo muy grande (máx ${MAX_MB}MB)`, "red");
+        e.target.value = "";
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        document.getElementById("input").value = text;
+        syncFromTextareas();
+        setStatus(`Importado: ${file.name} ✓`, "violet");
+      } catch (err) {
+        console.error(err);
+        setStatus("No se pudo leer el archivo", "red");
+      } finally {
+        e.target.value = "";
+      }
+    });
+
+    // Refrescar highlight al escribir
+    document.getElementById('input').addEventListener('input', syncFromTextareas);
 
     // Inicialización
-    updateHighlight("input-highlight", "");
-    updateHighlight("output-highlight", "");
+    document.getElementById("input").value = "";
+    document.getElementById("output").value = "";
+    syncFromTextareas();
   </script>
 </body>
 </html>
