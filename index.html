@@ -20,6 +20,7 @@
         radial-gradient(900px 500px at 15% 10%, rgba(168,85,247,.22), transparent 60%),
         radial-gradient(900px 500px at 85% 20%, rgba(139,92,246,.18), transparent 55%),
         linear-gradient(to bottom, var(--bg1), var(--bg0));
+      min-height: 100vh;
     }
 
     .glass {
@@ -27,6 +28,19 @@
       border: 1px solid var(--stroke);
       box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 40px var(--glow);
       backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .glass:hover {
+      box-shadow: 0 25px 70px rgba(0,0,0,.65), 0 0 50px var(--glow);
+    }
+
+    textarea {
+      resize: none;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
     }
   </style>
 </head>
@@ -36,6 +50,7 @@
     <p class="text-center text-gray-400 mb-8">WeAreDevs • Prometheus • LuaObfuscator + Env Logger by Cypher Scripts (2026)</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Input -->
       <div>
         <div class="flex justify-between mb-2 items-center">
           <h2 class="font-semibold text-lg">Código Obfuscado</h2>
@@ -50,10 +65,11 @@
             </button>
           </div>
         </div>
-        <textarea id="input" class="glass w-full h-96 overflow-auto rounded-2xl p-4 whitespace-pre-wrap break-words font-mono text-sm text-purple-100 placeholder:text-purple-200/40" placeholder="Pega aquí tu script Lua obfuscado..."></textarea>
+        <textarea id="input" class="glass w-full h-96 overflow-auto rounded-2xl p-4 whitespace-pre-wrap break-words font-mono text-sm text-purple-100 placeholder:text-purple-200/40" placeholder="Pega aquí tu script Lua obfuscado o importa un archivo..."></textarea>
         <input id="fileInput" type="file" accept=".lua,.txt,.log,text/plain" class="hidden" />
       </div>
 
+      <!-- Output -->
       <div>
         <div class="flex justify-between mb-2 items-center">
           <h2 class="font-semibold text-lg">Resultado / Logger Preparado</h2>
@@ -76,16 +92,19 @@
       <button onclick="clearAll()" class="bg-gray-700 hover:bg-gray-600 px-8 py-4 rounded-xl font-medium">Limpiar</button>
     </div>
 
-    <div id="status" class="mt-8 text-center text-lg font-mono"></div>
+    <div id="status" class="mt-8 text-center text-lg font-mono min-h-[2rem]"></div>
 
     <div class="mt-12 text-center text-sm text-gray-500 max-w-3xl mx-auto">
-      Ejemplo: Pega script → Preparar con Env Logger → Ejecuta en exploit → Pega logged.txt → Beautify → Descargar o Enviar a Grok
+      Flujo recomendado: Pega script → Preparar con Env Logger → Ejecuta en exploit → Pega contenido de logged.txt → Beautify → Descargar o Enviar a Grok
     </div>
   </div>
 
   <script>
+    // ==============================================
+    // ENV LOGGER COMPLETO (by Cypher Scripts)
+    // ==============================================
     const ENV_LOGGER = `print("[genv logger by Cypher Scripts]")
-writefile('logged.txt','\\nlocal Players = game:GetService("Players")\\nlocal GameSettings = game:GetService("GameSettings")\\nlocal LocalizationService = game:GetService("LocalizationService")\\nlocal WebSocketService = game:GetService("WebSocketService")\\nlocal WebSocketClient = game:GetService("WebSocketClient")\\nlocal HttpService = game:GetService("HttpService")\\nlocal UserInputService = game:GetService("UserInputService")\\nlocal RunService = game:GetService("RunService")\\nlocal TeleportService = game:GetService("TeleportService")\\n')
+writefile('logged.txt','\\\\nlocal Players = game:GetService("Players")\\\\nlocal GameSettings = game:GetService("GameSettings")\\\\nlocal LocalizationService = game:GetService("LocalizationService")\\\\nlocal WebSocketService = game:GetService("WebSocketService")\\\\nlocal WebSocketClient = game:GetService("WebSocketClient")\\\\nlocal HttpService = game:GetService("HttpService")\\\\nlocal UserInputService = game:GetService("UserInputService")\\\\nlocal RunService = game:GetService("RunService")\\\\nlocal TeleportService = game:GetService("TeleportService")\\\\n')
 
 local function isuilib()
  local a = debug.traceback()
@@ -94,19 +113,19 @@ local function isuilib()
 end
 
 local function formatlog(text)
- if type(text) !== 'string' then
+ if type(text) \~= 'string' then
   error('Bad argument #1 to formatlog "string" expected, got: '..type(text))
   return
  end
- return text:gsub('table: ',''):gsub('function: ',''):gsub('Ugc','game'):gsub('\\n',''):gsub('%s%s+',';'):gsub('""',''):gsub('Data Ping', 'DataPing'):gsub('Workspace','workspace'):gsub('game.Players','Players'):gsub('Teleport Service','TeleportService'):gsub('Run Service','RunService'):gsub('HttpGetAsync','HttpGet'):gsub('"',"'")
+ return text:gsub('table: ',''):gsub('function: ',''):gsub('Ugc','game'):gsub('\\\\n',''):gsub('%s%s+',';'):gsub('""',''):gsub('Data Ping', 'DataPing'):gsub('Workspace','workspace'):gsub('game.Players','Players'):gsub('Teleport Service','TeleportService'):gsub('Run Service','RunService'):gsub('HttpGetAsync','HttpGet'):gsub('"',"'")
 end
 
 local function tblformat(tbl, depth)
- local depth = depth || 0
+ local depth = depth or 0
  local res = ''
  local first = true
  if depth > 5 then return 'too big to display' end
- if type(tbl) !== 'table' then
+ if type(tbl) \~= 'table' then
   res = '"'..tostring(tbl)..'"'
   if res == '"nil"' then
    res = ''
@@ -114,14 +133,18 @@ local function tblformat(tbl, depth)
   return res
  end
  for i, v in pairs(tbl) do
-  if (!first) res = res .. ', '
+  if not first then res = res .. ', ' end
   first = false
-  if (typeof(i) == 'string') then
+  if type(i) == 'string' then
    res = res .. i .. ' = '
   end
-  res = res .. tostring(v)
+  if type(i) == 'table' then
+   res = res .. tblformat(v, depth + 1)
+  else
+   res = res .. tostring(v)
+  end
  end
- return res
+ return res .. ''
 end
 
 local Track = {}
@@ -134,38 +157,333 @@ local upvalscache = ''
 local formatedcache = ''
 local logcount = 1
 local function log(upvals, ...)
- upvals = upvals || 'nil'
+ upvals = upvals or 'nil'
  upvals = formatlog(tostring(upvals))
- if (#upvals > 100) {
-  upvals = upvals:sub(1,50) .. '... (' .. #upvals .. ' characters remaining)'
- }
- let args = [...arguments].slice(1)
- let formated = formatlog(args.map(String).join(' '))
- let logged = formated
- if (logged === cache) return
- if (formated === formatedcache && upvals === upvalscache) return
- let charliekirk = kirk(logged, upvals)
- if (kirked[charliekirk]) return
- if (upvals.includes('Signal')) logged = formated + ':Connect(function(...)end)'
- if (logged.includes('game:HttpGet')) logged = 'loadstring(' + formated + ')()'
- if (logcount > 36000) { game:shutdown(); return }
- if (logged.includes('IsA')) return
+ if #upvals > 100 then
+  local holder = #upvals
+  upvals = upvals:sub(1,50) .. '... (' .. holder .. ' character remaining)'
+ end
+ local args = ...
+ local formated = formatlog(tostring(args))
+ local logged = formated
+ if logged == cache then
+  return
+ end
+ if formated == formatedcache and upvals == upvalscache then
+  return
+ end
+ local charliekirk = kirk(logged, upvals)
+ if kirked[charliekirk] then
+  return
+ end
+ if upvals:find('Signal') then
+  logged = formated .. ':Connect(function(...)end)'
+ end
+ if logged:find('game:HttpGet') then
+  logged = 'loadstring('..formated..')()'
+ end
+ if logcount > 36000 then
+  game:shutdown()
+  return
+ end
+ if logged:find('IsA') then
+  return
+ end
  logcount += 1
  cache = logged
  upvalscache = upvals
  formatedcache = formated
  kirked[charliekirk] = true
- appendfile('logged.txt', logged + '\\n')
+ appendfile('logged.txt',logged..'\\\\n')
 end
 
-// ... (el resto del logger sigue igual, lo acorto por espacio pero en tu código original está completo)
+isfunctionhooked = nil
+restorefunction = nil
+
+function GlobalScan()
+ for i, v in pairs(_G) do
+  log('_G Scan', '_G.'..i..' = '..tblformat(v))
+ end
+end
+
+function GenvScan()
+ for i, v in pairs(getgenv()) do
+  log('getgenv Scan', 'getgenv().'..i..' = '..tblformat(v))
+ end
+end
+
+local oldsetfflag = clonefunction(setfflag)
+setfflag = newcclosure(function(flag, state)
+ local upvals = oldsetfflag(flag, state)
+ log(upvals,'setfflag("'..flag..'", '..'"'..state..'")')
+ return upvals
+end)
+
+if http and http.request then
+ setreadonly(http, false)
+ http.request = nil
+ setreadonly(http, false)
+end
+local oldrequest = request
+request = newcclosure(function(data)
+ local upvals = oldrequest(data)
+ local meow = data.Body
+ if type(data.Body) == 'string' then
+  if data.Body:sub(1,1) == '{' and data.Body:sub(-1) == '}' then
+   meow = data.Body
+  else
+   meow = '"'..data.Body..'"'
+  end
+ elseif type(data.Body) == 'table' then
+  meow = 'game:GetService("HttpService"):JSONEncode('..tblformat(data.Body)..')'
+ else
+  meow = tostring(data.Body)
+ end
+ local meowmeow = '{'
+ local first = true
+ if data.Headers then
+  for i, v in pairs(data.Headers) do
+   if not first then meowmeow = meowmeow .. ', ' end
+   first = false
+   meowmeow = meowmeow .. '["'..i..'"] = "'..v..'"'
+  end
+ end
+ meowmeow = meowmeow .. '}'
+ log(upvals, 'request({\\\\n Url = "'..data.Url..'",\\\\n Method = "'..data.Method..'",\\\\n Body = '..meow..',\\\\n Headers = '..meowmeow..'\\\\n})')
+ return upvals
+end)
+
+local oldl = clonefunction(loadstring)
+hookfunction(loadstring, function(str)
+ if true then
+  writefile(math.random(1,999)..'.txt', str)
+  warn'xd'
+ end
+ return oldl(str)
+end)
+
+local wss = game:GetService('WebSocketService')
+local oldwsscc = clonefunction(wss.CreateClient)
+hookfunction(game.WebSocketService.CreateClient, function(_, url)
+ warn('WSS')
+ if not url:lower():find'luarmor' then
+  log('idk i found luarmor use this xd', 'WebsocketService:CreateClient("WebSocketService","'..url..'")')
+ end
+ return oldwsscc(_, url)
+end)
+local wsc = game:GetService("WebSocketClient")
+
+Instance = Instance or {}
+local oldinstancenew = clonefunction(Instance.new)
+setreadonly(Instance, false)
+Instance.new = newcclosure(function(name, parent)
+ if checkcaller() and not isuilib() then
+  local upvals = oldinstancenew(name, parent)
+  local a = debug.getinfo(2,'Sl')
+  if a and a.source:find('@') then
+   log(upvals, 'local a = Instance.new("'..name..'")')
+  else
+   local b = tostring(name)
+   Track[upvals] = b
+   log(upvals, 'local '..b..' = Instance.new("'..name..'")')
+  end
+  return upvals
+ end
+ return oldinstancenew(name, parent)
+end)
+
+local mt = getrawmetatable(game)
+local oldindex = clonefunction(mt.__index)
+local oldnamecall = clonefunction(mt.__namecall)
+local oldnewindex = clonefunction(mt.__newindex)
+hookmetamethod(game,'__index',newcclosure(function(self, v, ...)
+ if checkcaller() and not isuilib() then
+  local upvals = oldindex(self, v, ...)
+  local formated = tblformat(...)
+  if v == 'Character' then
+   log('LocalPlayer.Character', self:GetFullName()..'.'..v)
+   return upvals
+  end
+  if v == 'GetService' then
+   return upvals
+  end
+  if v == 'HttpGet' then
+   return upvals
+  end
+  if v == 'JSONDecode' then
+   return upvals
+  end
+  if v == 'CoreGui' then
+   return upvals
+  end
+  if v == 'JSONEncode' then
+   return upvals
+  end
+  if v == 'JobId' then
+   log('game.JobId', self:GetFullName()..'.'..v)
+   return upvals
+  end
+  if v == 'PlaceId' then
+   log('game.PlaceId', self:GetFullName()..'.'..v)
+   return upvals
+  end
+  if v == 'WaitForChild' then
+   return upvals
+  end
+  if v == 'FindFirstChild' then
+   return upvals
+  end
+  if v == 'DescendantRemoving' then
+   return upvals
+  end
+  if tostring(upvals):find('function:') then
+   log(upvals, self:GetFullName()..':'..v..'('..formated..')')
+   return upvals
+  end
+  log(upvals, self:GetFullName()..'.'..v)
+  return upvals
+ end
+ return oldindex(self, v, ...)
+end))
+hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
+ if checkcaller() and not isuilib() and getnamecallmethod() \~= 'GetFullName' then
+  local instance = tostring(self)
+  if type(instance) == 'Instance' then
+   instance = oldnamecall(instance, 'GetFullName')
+  end
+  local upvals = oldnamecall(self, ...)
+  local args = {...}
+  local formated = tblformat(args)
+  if getnamecallmethod() == 'GetService' then
+   log(upvals, 'game:GetService("'..args[1]..'")')
+   return upvals
+  end
+  if getnamecallmethod() == 'WaitForChild' then
+   log(upvals, instance..':WaitForChild("'..args[1]..'")')
+   return upvals
+  end
+  if getnamecallmethod() == 'FindFirstChild' then
+   log(upvals, instance..':FindFirstChild("'..args[1]..'")')
+   return upvals
+  end
+  if getnamecallmethod() == 'HttpGet' then
+   log(upvals, 'game:HttpGet("'..args[1]..'", true)')
+   return upvals
+  end
+  log(upvals, instance..':'..getnamecallmethod()..'("'..formated..'")')
+  return upvals
+ end
+ return oldnamecall(self, ...)
+end))
+hookmetamethod(game, '__newindex', newcclosure(function(self, i, v)
+ if checkcaller() and not isuilib() then
+  local upvals = oldnewindex(self, i, v)
+  local a = Track[self]
+  local b = tostring(i)
+  local c = tostring(typeof(v)) or 'Unknown'
+  local d = tostring(v)
+  if a then
+   if b then
+    if c == 'Instance' then
+     log(upvals, a..'.'..b..' = '..v:GetFullName())
+    elseif c == 'number' then
+     log(upvals, a..'.'..b..' = '..d)
+    elseif c == 'string' then
+     log(upvals, a..'.'..b..' = "'..d..'"')
+    elseif c == 'boolean' then
+     log(upvals, a..'.'..b..' = '..d)
+    elseif c == 'Color3' then
+     log(upvals, a..'.'..b..' = Color3.new('..d..')')
+    elseif c == 'CFrame' then
+     log(upvals, a..'.'..b..' = CFrame.new('..d..')')
+    elseif c == 'Vector3' then
+     log(upvals, a..'.'..b..' = Vector3.new('..d..')')
+    elseif c == 'UDim2' then
+     log(upvals, a..'.'..b..' = UDim2.new('..d:gsub('{',''):gsub('}','')..')')
+    elseif c == 'Vector2' then
+     log(upvals, a..'.'..b..' = Vector2.new('..d..')')
+    elseif c == 'UDim' then
+     log(upvals, a..'.'..b..' = UDim.new('..d..')')
+    elseif c == 'EnumItem' then
+     log(upvals, a..'.'..b..' = '..d)
+    elseif c == 'ColorSequence' then
+     log(upvals, a..'.'..b..' = ColorSequence.new('..d:gsub('%s+',',')..')')
+    else
+     log(upvals, a..'.'..b..' = '..'['..c..'] '..d)
+    end
+   end
+  else
+   if b then
+    if c == 'Instance' then
+     log(upvals, 'a.'..b..' = '..v:GetFullName())
+    elseif c == 'number' then
+     log(upvals, 'a.'..b..' = '..d)
+    elseif c == 'string' then
+     log(upvals, 'a.'..b..' = "'..d..'"')
+    elseif c == 'boolean' then
+     log(upvals, 'a.'..b..' = '..d)
+    elseif c == 'Color3' then
+     log(upvals, 'a.'..b..' = Color3.new('..d..')')
+    elseif c == 'CFrame' then
+     log(upvals, 'a.'..b..' = CFrame.new('..d..')')
+    elseif c == 'Vector3' then
+     log(upvals, 'a.'..b..' = Vector3.new('..d..')')
+    elseif c == 'UDim2' then
+     log(upvals, 'a.'..b..' = UDim2.new('..d:gsub('{',''):gsub('}','')..')')
+    elseif c == 'Vector2' then
+     log(upvals, 'a.'..b..' = Vector2.new('..d..')')
+    elseif c == 'UDim' then
+     log(upvals, 'a.'..b..' = UDim.new('..d..')')
+    elseif c == 'EnumItem' then
+     log(upvals, 'a.'..b..' = '..d)
+    elseif c == 'ColorSequence' then
+     log(upvals, 'a.'..b..' = ColorSequence.new('..d:gsub('%s+',',')..')')
+    else
+     log(upvals, a..'.'..b..' = '..'['..c..'] '..d)
+    end
+   end
+  end
+  return upvals
+ end
+ return oldnewindex(self, i, v)
+end))
+
+game.DescendantRemoving:Connect(function(a)
+ Track[a] = nil
+end)
+
+local oldprint = print
+print = newcclosure(function(...)
+ if checkcaller() and not isuilib() then
+  local args = {...}
+  local formated = {}
+  for i = 1, select('#', ...) do
+   local v = args[i]
+   if type(v) == 'table' then
+    formated[i] = tblformat(v)
+   else
+    formated[i] = tostring(v)
+   end
+  end
+  local upvals = oldprint(...)
+  log(upvals, 'print("'.. table.concat(formated,'\\\\t') ..'")')
+  return upvals
+ end
+ return oldprint(...)
+end)
+
 print("[Logger] Executing user loadstring...")
 print("[Logger] All API calls will be logged to logged.txt")
 `;
 
+    // ==============================================
+    // FUNCIONES PRINCIPALES
+    // ==============================================
+
     function setStatus(msg, color = "violet") {
-      document.getElementById("status").innerHTML = `<span class="text-\( {color}-300 font-semibold"> \){msg}</span>`;
-      setTimeout(() => document.getElementById("status").innerHTML = "", 5000);
+      const statusEl = document.getElementById("status");
+      statusEl.innerHTML = `<span class="text-\( {color}-300 font-semibold"> \){msg}</span>`;
+      setTimeout(() => statusEl.innerHTML = "", 5000);
     }
 
     function beautify() {
@@ -183,12 +501,14 @@ print("[Logger] All API calls will be logged to logged.txt")
           return;
         }
 
+        // Decrementar indent
         if (/^end\b|^else\b|^elseif\b|^until\b|^\}|^\)/.test(trimmed)) {
           indentLevel = Math.max(0, indentLevel - 1);
         }
 
         let indented = '  '.repeat(indentLevel) + trimmed;
 
+        // Incrementar indent
         if (/^(local\s+)?function\b|if\b|for\b|while\b|repeat\b|then\b|else\b|elseif\b|do\b|\{$/.test(trimmed) ||
             trimmed.endsWith('do') || trimmed.endsWith('{') || trimmed.endsWith('then')) {
           indentLevel++;
@@ -200,8 +520,9 @@ print("[Logger] All API calls will be logged to logged.txt")
         result.push(indented);
       });
 
-      document.getElementById("output").value = result.join('\n');
-      setStatus("Beautify aplicado ✓", "amber");
+      const beautified = result.join('\n');
+      document.getElementById("output").value = beautified;
+      setStatus("Beautify mejorado aplicado ✓", "amber");
     }
 
     function downloadOutput() {
@@ -213,14 +534,16 @@ print("[Logger] All API calls will be logged to logged.txt")
       const a = document.createElement('a');
       a.href = url;
       a.download = 'deobfuscated.lua';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       setStatus("Archivo .lua descargado ✓", "emerald");
     }
 
     function prepareWithEnvLogger() {
       const obfuscated = document.getElementById("input").value.trim();
-      if (!obfuscated) return setStatus("Pega el script primero", "red");
+      if (!obfuscated) return setStatus("Pega el script obfuscado primero", "red");
 
       const full = ENV_LOGGER + `loadstring([[\n${obfuscated}\n]])()\n`;
       document.getElementById("output").value = full;
@@ -240,12 +563,21 @@ print("[Logger] All API calls will be logged to logged.txt")
       let code = document.getElementById("input").value;
       if (!code) return setStatus("Nada para procesar", "red");
 
-      code = code.replace(/string\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
-      code = code.replace(/string\.char\s*\(\s*(\d+(?:,\s*\d+)*)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
+      // Desencripta string.char + table.unpack
+      code = code.replace(/string\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, nums) => {
+        const chars = nums.split(',').map(n => parseInt(n.trim()));
+        return JSON.stringify(String.fromCharCode(...chars));
+      });
+
+      // string.char(97,98,99)
+      code = code.replace(/string\.char\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)/g, (_, nums) => {
+        const chars = nums.split(',').map(n => parseInt(n.trim()));
+        return JSON.stringify(String.fromCharCode(...chars));
+      });
 
       document.getElementById("output").value = code;
       beautify();
-      setStatus("Strings de LuaObfuscator desencriptadas ✓", "blue");
+      setStatus("LuaObfuscator strings desencriptadas ✓", "blue");
     }
 
     function deobfPrometheus() {
@@ -257,7 +589,7 @@ print("[Logger] All API calls will be logged to logged.txt")
 
       document.getElementById("output").value = code;
       beautify();
-      setStatus("Prometheus/WeAreDevs limpiado ✓", "rose");
+      setStatus("Prometheus/WeAreDevs limpieza básica ✓", "rose");
     }
 
     function deobfAll() {
@@ -269,53 +601,59 @@ print("[Logger] All API calls will be logged to logged.txt")
       } else {
         deobfPrometheus();
       }
+      beautify();
       setStatus("Deobf automático completado 🔥", "violet");
     }
 
     function copyOutput() {
       const out = document.getElementById("output").value.trim();
       if (!out) return setStatus("Nada para copiar", "gray");
-      navigator.clipboard.writeText(out).then(() => {
-        setStatus("Copiado ✓", "emerald");
-      }).catch(() => setStatus("Error al copiar", "red"));
+
+      navigator.clipboard.writeText(out)
+        .then(() => setStatus("Copiado al portapapeles ✓", "emerald"))
+        .catch(() => setStatus("Error al copiar (permisos del navegador?)", "red"));
     }
 
     function sendToGrok() {
       let text = document.getElementById("output").value.trim();
-      if (!text) return setStatus("No hay contenido", "red");
+      if (!text) return setStatus("No hay contenido para enviar", "red");
 
-      const isLog = text.includes(' = ') && (text.includes('Instance.new') || text.includes('game:GetService'));
+      const isLog = text.includes(' = ') && (text.includes('Instance.new') || text.includes('game:GetService') || text.includes('Players.'));
       let prompt = isLog 
-        ? `Este es un ENV LOG de un script obfuscado. Reconstruye el código original limpio, renombra variables, organiza, comenta.\n\nLog:\n\`\`\`lua\n${text.slice(0,7500)}\n\`\`\``
-        : `Deobfusca este script Lua pre-procesado. Renombra vars, quita junk, arregla flujo.\n\nCódigo:\n\`\`\`lua\n${text.slice(0,7500)}\n\`\`\``;
+        ? `Este es un ENV LOG generado por el logger de Cypher Scripts (similar a 25ms logger). Es de un script obfuscado con Prometheus/WeAreDevs u otro similar.\n\nTarea:\n- Reconstruye el script original lo más fiel posible usando las llamadas loggeadas\n- Renombra variables a nombres lógicos (ej: lplr = game.Players.LocalPlayer)\n- Elimina repeticiones y líneas innecesarias\n- Organiza en funciones/secciones claras\n- Agrega comentarios donde sea útil\n- Devuelve el código Lua limpio y funcional\n\nLog:\n\`\`\`lua\n\( {text.slice(0,7500)} \){text.length > 7500 ? '\n\n-- [truncado por longitud]' : ''}\n\`\`\``
+        : `Analiza y deobfusca este script Lua pre-procesado (strings desencriptadas + beautify). Renombra variables, quita código muerto/junk, reconstruye lógica si está flattened.\n\nCódigo:\n\`\`\`lua\n${text.slice(0,7500)}\n\`\`\``;
 
       const url = `https://grok.x.ai/?q=${encodeURIComponent(prompt)}`;
       window.open(url, '_blank');
-      setStatus("Abriendo Grok ✓", "indigo");
+      setStatus(`Abriendo Grok ${isLog ? '(modo ENV LOG)' : ''} ✓`, "indigo");
     }
 
     function clearAll() {
       document.getElementById("input").value = "";
       document.getElementById("output").value = "";
-      setStatus("Limpio", "gray");
+      setStatus("Todo limpio", "gray");
     }
 
-    // Importar archivo
+    // ==============================================
+    // IMPORTAR ARCHIVO
+    // ==============================================
     document.getElementById("fileInput").addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
       if (file.size > 5 * 1024 * 1024) {
-        setStatus("Archivo muy grande (máx 5MB)", "red");
+        setStatus("Archivo muy grande (máx 5 MB)", "red");
         return;
       }
 
       try {
         const text = await file.text();
         document.getElementById("input").value = text;
-        setStatus(`Importado: ${file.name} ✓`, "violet");
+        setStatus(`Archivo importado: ${file.name} ✓`, "violet");
       } catch (err) {
-        setStatus("Error al leer archivo", "red");
+        setStatus("Error al leer el archivo", "red");
+      } finally {
+        e.target.value = ""; // reset input file
       }
     });
   </script>
