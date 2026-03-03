@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cypher Deobfuscator - Súper Versión</title>
+  <title>Cypher Deobfuscator - Súper Versión Final</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -45,7 +45,7 @@
 <body class="text-gray-200 min-h-screen p-6">
   <div class="max-w-7xl mx-auto">
     <h1 class="text-6xl font-bold text-center mb-3 bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">Cypher Deobfuscator</h1>
-    <p class="text-center text-purple-300 mb-10 text-lg">Súper Versión 2026 • Fusion: Prometheus V2 + WeAreDevs Dumper + Env Logger</p>
+    <p class="text-center text-purple-300 mb-10 text-lg">Fusion: Prometheus V2 + WeAreDevs Dumper + Env Logger Mejorado</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div class="space-y-4">
@@ -95,9 +95,268 @@
 
   <script>
     // ==============================================
-    // ENV LOGGER MEJORADO (completo y optimizado)
+    // ENV LOGGER MEJORADO Y COMPLETO (fusionado con repos)
     // ==============================================
-    const ENV_LOGGER = `print("[genv logger by Cypher Scripts - Enhanced 2026]")
+    const ENV_LOGGER = `print("[genv logger by Cypher Scripts - Enhanced]")
+
+-- Inicializa el archivo de log con servicios comunes
+writefile('logged.txt', [[
+-- Cypher Logger - Registro de todas las llamadas API
+-- Generado el ]] .. os.date("%Y-%m-%d %H:%M:%S") .. [[
+
+local function isuilib()
+    local a = debug.traceback()
+    local b = a:lower():gsub('%s+', '')
+    return b:find('windui') or b:find('rayfield') or b:find('obsidian') or
+           b:find('interface') or b:find('luna') or b:find('fluent') or b:find('drday')
+end
+
+local function formatlog(text)
+    if type(text) \~= 'string' then
+        return tostring(text)  -- fallback seguro si no es string
+    end
+    return text
+        :gsub('table: ', '')
+        :gsub('function: ', '')
+        :gsub('Ugc', 'game')
+        :gsub('\n', '')
+        :gsub('%s%s+', ';')
+        :gsub('""', '')
+        :gsub('Data Ping', 'DataPing')
+        :gsub('Workspace', 'workspace')
+        :gsub('game%.Players', 'Players')
+        :gsub('Teleport Service', 'TeleportService')
+        :gsub('Run Service', 'RunService')
+        :gsub('HttpGetAsync', 'HttpGet')
+        :gsub('"', "'")
+end
+
+local function tblformat(tbl, depth)
+    depth = depth or 0
+    if depth > 6 then return "<deep table>" end  -- evita recursión infinita
+
+    if type(tbl) \~= 'table' then
+        local str = tostring(tbl)
+        return (str == "nil") and "" or '"' .. str .. '"'
+    end
+
+    local res = ''
+    local first = true
+    for i, v in pairs(tbl) do
+        if not first then res = res .. ', ' end
+        first = false
+
+        local keyStr = (type(i) == 'string' and i:match("^[%w_]+$")) and i or ('[%q]'):format(tostring(i))
+        res = res .. keyStr .. ' = ' .. tblformat(v, depth + 1)
+    end
+    return '{' .. res .. '}'
+end
+
+local Track = {}
+local kirked = {}
+local function kirk(fem, boy)
+    return fem .. ';' .. boy
+end
+
+local cache = ''
+local upvalscache = ''
+local formatedcache = ''
+local logcount = 1
+
+local function log(upvals, ...)
+    upvals = upvals or 'nil'
+    upvals = formatlog(tostring(upvals))
+
+    if #upvals > 120 then
+        upvals = upvals:sub(1, 80) .. '... (' .. #upvals .. ' chars)'
+    end
+
+    local args = {...}
+    local formated = formatlog(table.concat(args, " "))
+    local logged = formated
+
+    if logged == cache then return end
+    if formated == formatedcache and upvals == upvalscache then return end
+
+    local key = logged .. ';' .. upvals
+    if kirked[key] then return end
+    kirked[key] = true
+
+    -- Mejora: detectar conexiones y async calls
+    if upvals:find('Signal') or upvals:find('Connect') then
+        logged = formated .. ':Connect(function(...)end)'
+    end
+    if logged:find('game:HttpGet') or logged:find('HttpGet') then
+        logged = 'loadstring(' .. formated .. ')()'
+    end
+
+    if logcount > 50000 then
+        warn("[Cypher Logger] Límite de logs alcanzado - cerrando")
+        game:Shutdown()
+        return
+    end
+
+    logcount += 1
+    cache = logged
+    upvalscache = upvals
+    formatedcache = formated
+
+    appendfile('logged.txt', logged .. '\n')
+end
+
+-- ==============================================
+-- HOOKS (mismo que tenías, pero con pequeños fixes de robustez)
+-- ==============================================
+
+isfunctionhooked = nil
+restorefunction = nil
+
+function GlobalScan()
+    for i, v in pairs(_G) do
+        log('_G Scan', '_G.' .. tostring(i) .. ' = ' .. tblformat(v))
+    end
+end
+
+function GenvScan()
+    for i, v in pairs(getgenv()) do
+        log('getgenv Scan', 'getgenv().' .. tostring(i) .. ' = ' .. tblformat(v))
+    end
+end
+
+-- setfflag hook
+local oldsetfflag = clonefunction(setfflag)
+setfflag = newcclosure(function(flag, state)
+    local upvals = oldsetfflag(flag, state)
+    log(upvals, 'setfflag("' .. flag .. '", "' .. tostring(state) .. '")')
+    return upvals
+end)
+
+-- request hook
+if http and http.request then
+    setreadonly(http, false)
+    http.request = nil
+    setreadonly(http, true)
+end
+
+local oldrequest = request
+request = newcclosure(function(data)
+    local upvals = oldrequest(data)
+    local bodyStr = (type(data.Body) == 'string') and ('"' .. data.Body .. '"') or
+                    (type(data.Body) == 'table') and ('HttpService:JSONEncode(' .. tblformat(data.Body) .. ')') or
+                    tostring(data.Body)
+
+    local headersStr = '{'
+    if data.Headers then
+        local first = true
+        for k, v in pairs(data.Headers) do
+            if not first then headersStr = headersStr .. ', ' end
+            first = false
+            headersStr = headersStr .. '["' .. k .. '"] = "' .. v .. '"'
+        end
+    end
+    headersStr = headersStr .. '}'
+
+    log(upvals, ('request({ Url = "%s", Method = "%s", Body = %s, Headers = %s })'):format(
+        data.Url or "nil", data.Method or "nil", bodyStr, headersStr))
+    return upvals
+end)
+
+-- loadstring hook
+local oldloadstring = loadstring
+loadstring = function(str)
+    if str then
+        pcall(function()
+            writefile("loadstring_dump_" .. math.random(1000,9999) .. ".lua", str)
+        end)
+    end
+    return oldloadstring(str)
+end
+
+-- WebSocket hook
+local wss = game:GetService('WebSocketService')
+local oldCreateClient = wss.CreateClient
+wss.CreateClient = newcclosure(function(self, url)
+    if url and not url:lower():find('luarmor') then
+        log(nil, 'WebSocketService:CreateClient("' .. url .. '")')
+    end
+    return oldCreateClient(self, url)
+end)
+
+-- Instance.new hook
+Instance = Instance or {}
+local oldInstanceNew = clonefunction(Instance.new)
+setreadonly(Instance, false)
+Instance.new = newcclosure(function(name, parent)
+    if checkcaller() and not isuilib() then
+        local upvals = oldInstanceNew(name, parent)
+        local source = debug.getinfo(2, 'S').source or ""
+        if source:find('@') then
+            log(upvals, 'local temp = Instance.new("' .. name .. '")')
+        else
+            local varName = tostring(name):gsub("%W+", "_")
+            Track[upvals] = varName
+            log(upvals, 'local ' .. varName .. ' = Instance.new("' .. name .. '")')
+        end
+        return upvals
+    end
+    return oldInstanceNew(name, parent)
+end)
+
+-- Metamethods hooks (mismo que tenías, pero con mejor manejo de errores)
+local mt = getrawmetatable(game)
+local oldIndex = clonefunction(mt.__index)
+local oldNamecall = clonefunction(mt.__namecall)
+local oldNewindex = clonefunction(mt.__newindex)
+
+hookmetamethod(game, '__index', newcclosure(function(self, key, ...)
+    if checkcaller() and not isuilib() then
+        local upvals = oldIndex(self, key, ...)
+        local formattedArgs = tblformat({...})
+        log(upvals, self:GetFullName() .. '.' .. tostring(key) .. ' (' .. formattedArgs .. ')')
+        return upvals
+    end
+    return oldIndex(self, key, ...)
+end))
+
+hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
+    if checkcaller() and not isuilib() and getnamecallmethod() \~= 'GetFullName' then
+        local method = getnamecallmethod()
+        local args = {...}
+        local formatted = tblformat(args)
+        local instanceName = tostring(self)
+        log(nil, instanceName .. ':' .. method .. '(' .. formatted .. ')')
+        return oldNamecall(self, ...)
+    end
+    return oldNamecall(self, ...)
+end))
+
+hookmetamethod(game, '__newindex', newcclosure(function(self, key, value)
+    if checkcaller() and not isuilib() then
+        local upvals = oldNewindex(self, key, value)
+        local varName = Track[self] or "unknown"
+        log(upvals, varName .. '.' .. tostring(key) .. ' = ' .. tostring(value))
+        return upvals
+    end
+    return oldNewindex(self, key, value)
+end))
+
+game.DescendantRemoving:Connect(function(obj)
+    Track[obj] = nil
+end)
+
+-- Print hook
+local oldPrint = print
+print = newcclosure(function(...)
+    if checkcaller() and not isuilib() then
+        local args = {...}
+        local formatted = table.concat(args, "\t")
+        log(nil, 'print("' .. formatted .. '")')
+    end
+    return oldPrint(...)
+end)
+
+print("[Logger] Ejecutando loadstring del usuario...")
+print("[Logger] Todas las llamadas API se loguearán en logged.txt")`
 
 -- Inicializa el archivo de log con servicios comunes
 writefile('logged.txt', [[
@@ -124,14 +383,14 @@ local function isuilib()
 end
 
 local function formatlog(text)
-    if type(text) !== 'string' then
-        return tostring(text)  -- fallback seguro si no es string
+    if type(text) \~= 'string' then
+        return tostring(text)
     end
     return text
         :gsub('table: ', '')
         :gsub('function: ', '')
         :gsub('Ugc', 'game')
-        :gsub('\n', '')
+        :gsub('\\n', '')
         :gsub('%s%s+', ';')
         :gsub('""', '')
         :gsub('Data Ping', 'DataPing')
@@ -145,9 +404,9 @@ end
 
 local function tblformat(tbl, depth)
     depth = depth or 0
-    if depth > 6 then return "<deep table>" end  -- evita recursión infinita
+    if depth > 6 then return "<deep table>" end
 
-    if type(tbl) !== 'table' then
+    if type(tbl) \~= 'table' then
         local str = tostring(tbl)
         return (str == "nil") and "" or '"' .. str .. '"'
     end
@@ -201,6 +460,11 @@ local function log(upvals, ...)
         logged = 'loadstring(' .. formated .. ')()'
     end
 
+    -- Mejora de rconsoIe: detectar concatenaciones grandes (payloads)
+    if #formated > 200 and formated:match('^%s*["\']') then
+        logged = '[LARGE CONCAT/PAYLOAD] ' .. logged
+    end
+
     if logcount > 50000 then
         warn("[Cypher Logger] Límite de logs alcanzado - cerrando")
         game:Shutdown()
@@ -215,7 +479,7 @@ local function log(upvals, ...)
     appendfile('logged.txt', logged .. '\n')
 end
 
--- HOOKS COMPLETOS (tu versión original, sin cambios innecesarios)
+-- HOOKS COMPLETOS (tu versión + mejoras)
 isfunctionhooked = nil
 restorefunction = nil
 
@@ -253,7 +517,7 @@ request = newcclosure(function(data)
 
     local headersStr = '{'
     if data.Headers then
-        let first = true
+        local first = true
         for k, v in pairs(data.Headers) do
             if not first then headersStr = headersStr .. ', ' end
             first = false
@@ -273,6 +537,7 @@ loadstring = function(str)
         pcall(function()
             writefile("loadstring_dump_" .. math.random(1000,9999) .. ".lua", str)
         end)
+        log(nil, '[LOADSTRING] Content length: ' .. #str)
     end
     return oldloadstring(str)
 end
@@ -292,11 +557,11 @@ setreadonly(Instance, false)
 Instance.new = newcclosure(function(name, parent)
     if checkcaller() and not isuilib() then
         local upvals = oldInstanceNew(name, parent)
-        let source = debug.getinfo(2, 'S').source or ""
+        local source = debug.getinfo(2, 'S').source or ""
         if source:find('@') then
             log(upvals, 'local temp = Instance.new("' .. name .. '")')
         else
-            let varName = tostring(name):gsub("%W+", "_")
+            local varName = tostring(name):gsub("%W+", "_")
             Track[upvals] = varName
             log(upvals, 'local ' .. varName .. ' = Instance.new("' .. name .. '")')
         end
@@ -306,14 +571,14 @@ Instance.new = newcclosure(function(name, parent)
 end)
 
 local mt = getrawmetatable(game)
-let oldIndex = clonefunction(mt.__index)
-let oldNamecall = clonefunction(mt.__namecall)
-let oldNewindex = clonefunction(mt.__newindex)
+local oldIndex = clonefunction(mt.__index)
+local oldNamecall = clonefunction(mt.__namecall)
+local oldNewindex = clonefunction(mt.__newindex)
 
 hookmetamethod(game, '__index', newcclosure(function(self, key, ...)
     if checkcaller() and not isuilib() then
-        let upvals = oldIndex(self, key, ...)
-        let formattedArgs = tblformat({...})
+        local upvals = oldIndex(self, key, ...)
+        local formattedArgs = tblformat({...})
         log(upvals, self:GetFullName() .. '.' .. tostring(key) .. ' (' .. formattedArgs .. ')')
         return upvals
     end
@@ -321,11 +586,11 @@ hookmetamethod(game, '__index', newcclosure(function(self, key, ...)
 end))
 
 hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
-    if checkcaller() and not isuilib() and getnamecallmethod() !== 'GetFullName' then
-        let method = getnamecallmethod()
-        let args = {...}
-        let formatted = tblformat(args)
-        let instanceName = tostring(self)
+    if checkcaller() and not isuilib() and getnamecallmethod() \~= 'GetFullName' then
+        local method = getnamecallmethod()
+        local args = {...}
+        local formatted = tblformat(args)
+        local instanceName = tostring(self)
         log(nil, instanceName .. ':' .. method .. '(' .. formatted .. ')')
         return oldNamecall(self, ...)
     end
@@ -334,8 +599,8 @@ end))
 
 hookmetamethod(game, '__newindex', newcclosure(function(self, key, value)
     if checkcaller() and not isuilib() then
-        let upvals = oldNewindex(self, key, value)
-        let varName = Track[self] or "unknown"
+        local upvals = oldNewindex(self, key, value)
+        local varName = Track[self] or "unknown"
         log(upvals, varName .. '.' .. tostring(key) .. ' = ' .. tostring(value))
         return upvals
     end
@@ -346,11 +611,11 @@ game.DescendantRemoving:Connect(function(obj)
     Track[obj] = nil
 end)
 
-let oldPrint = print
+local oldPrint = print
 print = newcclosure(function(...)
     if checkcaller() and not isuilib() then
-        let args = {...}
-        let formatted = table.concat(args, "\t")
+        local args = {...}
+        local formatted = table.concat(args, "\t")
         log(nil, 'print("' .. formatted .. '")')
     end
     return oldPrint(...)
@@ -435,16 +700,25 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
       let code = document.getElementById("output").value || document.getElementById("input").value;
       if (!code.trim()) return setStatus("Nada para procesar", "red");
 
+      // Undo string decrypt PRNG-like (de V2)
       code = code.replace(/STRINGS\[DECRYPT\(([^)]+)\s*,\s*(\d+)\)\]/g, (_, enc, seed) => {
         let decrypted = enc.replace(/./g, c => String.fromCharCode(c.charCodeAt(0) ^ parseInt(seed)));
         return JSON.stringify(decrypted);
       });
 
+      // Undo constant array inline
       code = code.replace(/CONST\[(\d+)\]/g, (_, idx) => `"CONST_${idx}"`);
 
+      // Proxy locals rewrite
       code = code.replace(/local\s+(\w+)\s*=\s*proxy_(\w+)/g, 'local $2 = proxy_$1 -- proxy undone');
 
+      // Join split strings
       code = code.replace(/'([^']*)' \.\. '([^']*)'/g, '"$1$2"');
+
+      // Limpieza extra de rconsoIe (concat grandes)
+      code = code.replace(/table\.concat\s*\(\s*([^)]+)\s*\)/g, (_, t) => {
+        return '"[CONCAT DETECTADO] ' + t + '"';
+      });
 
       document.getElementById("output").value = code;
       beautify();
@@ -463,7 +737,10 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
           if (match) reconstructed += `print("${match[1]}")\n`;
         }
         if (line.includes('LOADSTRING') || line.includes('loadstring')) {
-          reconstructed += '-- Loadstring detectado en log\n';
+          reconstructed += '-- Loadstring detectado\n';
+        }
+        if (line.includes('[LARGE CONCAT/PAYLOAD]')) {
+          reconstructed += '-- Payload grande detectado (posible script oculto)\n';
         }
       });
 
@@ -485,8 +762,8 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
       let code = document.getElementById("input").value;
       if (!code) return setStatus("Nada para procesar", "red");
 
-      code = code.replace(/string\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, nums) => JSON.stringify(String.fromCharCode(...nums.split(',').map(Number))));
-      code = code.replace(/string\.char\s*\(\s*(\d+(?:,\s*\d+)*)\s*\)/g, (_, nums) => JSON.stringify(String.fromCharCode(...nums.split(',').map(Number))));
+      code = code.replace(/string\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
+      code = code.replace(/string\.char\s*\(\s*(\d+(?:,\s*\d+)*)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
 
       document.getElementById("output").value = code;
       beautify();
@@ -509,11 +786,9 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
       const code = document.getElementById("input").value.trim();
       if (!code) return setStatus("Ingresa código primero", "red");
 
-      if (/LuaObfuscator|string\.char|table\.unpack/.test(code)) {
-        deobfLuaObfuscator();
-      } else {
-        deobfPrometheus();
-      }
+      if (/LuaObfuscator|string\.char|table\.unpack/.test(code)) deobfLuaObfuscator();
+      else deobfPrometheus();
+
       beautify();
       setStatus("Deobf automático completado 🔥", "violet");
     }
