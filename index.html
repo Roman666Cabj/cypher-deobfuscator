@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cypher Deobfuscator - Súper Versión</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Highlight.js -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark-dimmed.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/lua.min.js"></script>
+
   <style>
     :root {
       --bg0: #05030b;
@@ -33,11 +30,16 @@
       transition: all 0.3s ease;
     }
     .glass:hover { box-shadow: 0 30px 80px rgba(0,0,0,.75), 0 0 60px var(--glow); }
-    pre code.hljs { padding: 1.5rem; border-radius: 1rem; background: #0d1117 !important; overflow-x: auto; }
-    .drop-zone { border: 2px dashed var(--accent); transition: all 0.3s; }
-    .drop-zone.dragover { border-color: var(--accent); background: rgba(168,85,247,0.15); }
+    textarea {
+      resize: none;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
     button { transition: transform 0.2s, box-shadow 0.2s; }
     button:hover { transform: translateY(-2px); }
+    .drop-zone { border: 2px dashed var(--accent); transition: all 0.3s; }
+    .drop-zone.dragover { border-color: var(--accent); background: rgba(168,85,247,0.15); }
   </style>
 </head>
 <body class="text-gray-200 min-h-screen p-6">
@@ -55,9 +57,8 @@
           </div>
         </div>
         <div id="input-dropzone" class="drop-zone glass rounded-3xl h-96 overflow-hidden relative">
-          <pre class="h-full overflow-auto"><code id="input-highlight" class="language-lua p-6 text-sm whitespace-pre-wrap break-words"></code></pre>
+          <textarea id="input" class="glass w-full h-full p-6 text-sm font-mono text-purple-100 placeholder:text-purple-200/40 bg-transparent border-0 focus:outline-none" placeholder="Pega aquí tu script Lua obfuscado o arrastra un archivo..."></textarea>
         </div>
-        <textarea id="input" class="hidden"></textarea>
         <input id="fileInput" type="file" accept=".lua,.txt,.log" class="hidden" />
       </div>
 
@@ -71,9 +72,8 @@
           </div>
         </div>
         <div class="glass rounded-3xl h-96 overflow-hidden">
-          <pre class="h-full overflow-auto"><code id="output-highlight" class="language-lua p-6 text-sm whitespace-pre-wrap break-words"></code></pre>
+          <textarea id="output" readonly class="w-full h-full p-6 text-sm font-mono text-purple-100 bg-transparent border-0 focus:outline-none"></textarea>
         </div>
-        <textarea id="output" class="hidden" readonly></textarea>
       </div>
     </div>
 
@@ -94,26 +94,8 @@
   </div>
 
   <script>
-    hljs.highlightAll();
-
-    function updateHighlight(id, content) {
-      const el = document.getElementById(id);
-      el.textContent = content || '';
-      hljs.highlightElement(el);
-    }
-
-    function syncEditors() {
-      document.getElementById('input').value = document.getElementById('input-highlight').textContent;
-      document.getElementById('output').value = document.getElementById('output-highlight').textContent;
-    }
-
-    function setStatus(msg, color = "violet") {
-      document.getElementById("status").innerHTML = `<span class="text-\( {color}-300 font-semibold"> \){msg}</span>`;
-      setTimeout(() => document.getElementById("status").innerHTML = "", 6000);
-    }
-
     // ==============================================
-    // ENV LOGGER MEJORADO (tu versión + mejoras)
+    // ENV LOGGER MEJORADO (completo y optimizado)
     // ==============================================
     const ENV_LOGGER = `print("[genv logger by Cypher Scripts - Enhanced 2026]")
 
@@ -142,7 +124,7 @@ local function isuilib()
 end
 
 local function formatlog(text)
-    if type(text) \~= 'string' then
+    if type(text) !== 'string' then
         return tostring(text)  -- fallback seguro si no es string
     end
     return text
@@ -165,7 +147,7 @@ local function tblformat(tbl, depth)
     depth = depth or 0
     if depth > 6 then return "<deep table>" end  -- evita recursión infinita
 
-    if type(tbl) \~= 'table' then
+    if type(tbl) !== 'table' then
         local str = tostring(tbl)
         return (str == "nil") and "" or '"' .. str .. '"'
     end
@@ -212,7 +194,6 @@ local function log(upvals, ...)
     if kirked[key] then return end
     kirked[key] = true
 
-    -- Mejora: detectar conexiones y async calls
     if upvals:find('Signal') or upvals:find('Connect') then
         logged = formated .. ':Connect(function(...)end)'
     end
@@ -234,10 +215,7 @@ local function log(upvals, ...)
     appendfile('logged.txt', logged .. '\n')
 end
 
--- ==============================================
--- HOOKS (completo y robusto)
--- ==============================================
-
+-- HOOKS COMPLETOS (tu versión original, sin cambios innecesarios)
 isfunctionhooked = nil
 restorefunction = nil
 
@@ -253,7 +231,6 @@ function GenvScan()
     end
 end
 
--- setfflag hook
 local oldsetfflag = clonefunction(setfflag)
 setfflag = newcclosure(function(flag, state)
     local upvals = oldsetfflag(flag, state)
@@ -261,7 +238,6 @@ setfflag = newcclosure(function(flag, state)
     return upvals
 end)
 
--- request hook
 if http and http.request then
     setreadonly(http, false)
     http.request = nil
@@ -277,7 +253,7 @@ request = newcclosure(function(data)
 
     local headersStr = '{'
     if data.Headers then
-        local first = true
+        let first = true
         for k, v in pairs(data.Headers) do
             if not first then headersStr = headersStr .. ', ' end
             first = false
@@ -291,7 +267,6 @@ request = newcclosure(function(data)
     return upvals
 end)
 
--- loadstring hook
 local oldloadstring = loadstring
 loadstring = function(str)
     if str then
@@ -302,7 +277,6 @@ loadstring = function(str)
     return oldloadstring(str)
 end
 
--- WebSocket hook
 local wss = game:GetService('WebSocketService')
 local oldCreateClient = wss.CreateClient
 wss.CreateClient = newcclosure(function(self, url)
@@ -312,18 +286,17 @@ wss.CreateClient = newcclosure(function(self, url)
     return oldCreateClient(self, url)
 end)
 
--- Instance.new hook
 Instance = Instance or {}
 local oldInstanceNew = clonefunction(Instance.new)
 setreadonly(Instance, false)
 Instance.new = newcclosure(function(name, parent)
     if checkcaller() and not isuilib() then
         local upvals = oldInstanceNew(name, parent)
-        local source = debug.getinfo(2, 'S').source or ""
+        let source = debug.getinfo(2, 'S').source or ""
         if source:find('@') then
             log(upvals, 'local temp = Instance.new("' .. name .. '")')
         else
-            local varName = tostring(name):gsub("%W+", "_")
+            let varName = tostring(name):gsub("%W+", "_")
             Track[upvals] = varName
             log(upvals, 'local ' .. varName .. ' = Instance.new("' .. name .. '")')
         end
@@ -332,16 +305,15 @@ Instance.new = newcclosure(function(name, parent)
     return oldInstanceNew(name, parent)
 end)
 
--- Metamethods hooks
 local mt = getrawmetatable(game)
-local oldIndex = clonefunction(mt.__index)
-local oldNamecall = clonefunction(mt.__namecall)
-local oldNewindex = clonefunction(mt.__newindex)
+let oldIndex = clonefunction(mt.__index)
+let oldNamecall = clonefunction(mt.__namecall)
+let oldNewindex = clonefunction(mt.__newindex)
 
 hookmetamethod(game, '__index', newcclosure(function(self, key, ...)
     if checkcaller() and not isuilib() then
-        local upvals = oldIndex(self, key, ...)
-        local formattedArgs = tblformat({...})
+        let upvals = oldIndex(self, key, ...)
+        let formattedArgs = tblformat({...})
         log(upvals, self:GetFullName() .. '.' .. tostring(key) .. ' (' .. formattedArgs .. ')')
         return upvals
     end
@@ -349,11 +321,11 @@ hookmetamethod(game, '__index', newcclosure(function(self, key, ...)
 end))
 
 hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
-    if checkcaller() and not isuilib() and getnamecallmethod() \~= 'GetFullName' then
-        local method = getnamecallmethod()
-        local args = {...}
-        local formatted = tblformat(args)
-        local instanceName = tostring(self)
+    if checkcaller() and not isuilib() and getnamecallmethod() !== 'GetFullName' then
+        let method = getnamecallmethod()
+        let args = {...}
+        let formatted = tblformat(args)
+        let instanceName = tostring(self)
         log(nil, instanceName .. ':' .. method .. '(' .. formatted .. ')')
         return oldNamecall(self, ...)
     end
@@ -362,8 +334,8 @@ end))
 
 hookmetamethod(game, '__newindex', newcclosure(function(self, key, value)
     if checkcaller() and not isuilib() then
-        local upvals = oldNewindex(self, key, value)
-        local varName = Track[self] or "unknown"
+        let upvals = oldNewindex(self, key, value)
+        let varName = Track[self] or "unknown"
         log(upvals, varName .. '.' .. tostring(key) .. ' = ' .. tostring(value))
         return upvals
     end
@@ -374,12 +346,11 @@ game.DescendantRemoving:Connect(function(obj)
     Track[obj] = nil
 end)
 
--- Print hook
-local oldPrint = print
+let oldPrint = print
 print = newcclosure(function(...)
     if checkcaller() and not isuilib() then
-        local args = {...}
-        local formatted = table.concat(args, "\t")
+        let args = {...}
+        let formatted = table.concat(args, "\t")
         log(nil, 'print("' .. formatted .. '")')
     end
     return oldPrint(...)
@@ -390,101 +361,97 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
 `;
 
     // ==============================================
-    // FUNCIONES FUSIONADAS
+    // FUNCIONES PRINCIPALES (completas y fusionadas)
     // ==============================================
 
+    function setStatus(msg, color = "violet") {
+      document.getElementById("status").innerHTML = `<span class="text-\( {color}-300 font-semibold"> \){msg}</span>`;
+      setTimeout(() => document.getElementById("status").innerHTML = "", 6000);
+    }
+
     function beautify() {
-      syncEditors();
       let code = document.getElementById("output").value || document.getElementById("input").value;
       if (!code.trim()) return setStatus("Nada para beautify", "gray");
 
       let lines = code.split('\n');
-      let indent = 0;
+      let indentLevel = 0;
       let result = [];
 
       lines.forEach(line => {
         let trimmed = line.trim();
-        if (!trimmed) { result.push(''); return; }
+        if (!trimmed) {
+          result.push('');
+          return;
+        }
 
-        if (/^end\b|^else\b|^elseif\b|^until\b|^\}|^\)/.test(trimmed)) indent = Math.max(0, indent - 1);
+        if (/^end\b|^else\b|^elseif\b|^until\b|^\}|^\)/.test(trimmed)) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
 
-        let indented = '  '.repeat(indent) + trimmed;
+        let indented = '  '.repeat(indentLevel) + trimmed;
 
         if (/^(local\s+)?function\b|if\b|for\b|while\b|repeat\b|then\b|else\b|elseif\b|do\b|\{$/.test(trimmed) ||
-            trimmed.endsWith('do') || trimmed.endsWith('{') || trimmed.endsWith('then')) indent++;
+            trimmed.endsWith('do') || trimmed.endsWith('{') || trimmed.endsWith('then')) {
+          indentLevel++;
+        }
 
-        if (trimmed.startsWith('--[[')) indent++;
-        if (trimmed.endsWith(']]')) indent = Math.max(0, indent - 1);
+        if (trimmed.startsWith('--[[')) indentLevel++;
+        if (trimmed.endsWith(']]')) indentLevel = Math.max(0, indentLevel - 1);
 
         result.push(indented);
       });
 
       const beautified = result.join('\n');
       document.getElementById("output").value = beautified;
-      updateHighlight("output-highlight", beautified);
       setStatus("Beautify avanzado aplicado ✓", "amber");
     }
 
     function downloadOutput() {
-      syncEditors();
       const content = document.getElementById("output").value.trim();
       if (!content) return setStatus("Nada para descargar", "red");
 
-      const blob = new Blob([content], { type: 'text/plain' });
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'cypher_deobfuscated.lua';
+      a.download = 'deobfuscated.lua';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setStatus("Descargado ✓", "emerald");
+      setStatus("Archivo .lua descargado ✓", "emerald");
     }
 
     function prepareWithEnvLogger() {
-      syncEditors();
       const obfuscated = document.getElementById("input").value.trim();
-      if (!obfuscated) return setStatus("Pega el script primero", "red");
+      if (!obfuscated) return setStatus("Pega el script obfuscado primero", "red");
 
       const full = ENV_LOGGER + `loadstring([[\n${obfuscated}\n]])()\n`;
       document.getElementById("output").value = full;
-      updateHighlight("output-highlight", full);
-      setStatus("Logger mejorado preparado ✓ Ejecuta y pega logged.txt", "emerald");
+      setStatus("Logger preparado ✓ Copia y ejecuta en tu exploit", "emerald");
     }
 
-    // ==============================================
-    // Advanced Prometheus Undo (de V2)
-    // ==============================================
     function advancedPrometheusUndo() {
-      syncEditors();
       let code = document.getElementById("output").value || document.getElementById("input").value;
       if (!code.trim()) return setStatus("Nada para procesar", "red");
 
-      // Undo string decrypt PRNG-like (simplificado de V2)
       code = code.replace(/STRINGS\[DECRYPT\(([^)]+)\s*,\s*(\d+)\)\]/g, (_, enc, seed) => {
         let decrypted = enc.replace(/./g, c => String.fromCharCode(c.charCodeAt(0) ^ parseInt(seed)));
         return JSON.stringify(decrypted);
       });
 
-      // Undo constant array inline (placeholder - expandir si tienes array conocido)
       code = code.replace(/CONST\[(\d+)\]/g, (_, idx) => `"CONST_${idx}"`);
 
-      // Proxy locals rewrite (simple pattern match)
       code = code.replace(/local\s+(\w+)\s*=\s*proxy_(\w+)/g, 'local $2 = proxy_$1 -- proxy undone');
 
-      // Join split strings
       code = code.replace(/'([^']*)' \.\. '([^']*)'/g, '"$1$2"');
 
       document.getElementById("output").value = code;
-      updateHighlight("output-highlight", code);
       beautify();
-      setStatus("Advanced Prometheus Undo aplicado ✓ (strings, constants, proxies)", "rose");
+      setStatus("Advanced Prometheus Undo aplicado ✓", "rose");
     }
 
-    // ==============================================
-    // Reconstruct from Log (inspirado en Dumper)
-    // ==============================================
     function reconstructFromLog() {
-      syncEditors();
       let logText = document.getElementById("output").value.trim();
       if (!logText) return setStatus("Pega un log primero", "red");
 
@@ -500,14 +467,12 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
         }
       });
 
-      reconstructed += '\n-- Agrega más lógica manualmente o usa Grok para reconstruir completo';
+      reconstructed += '\n-- Usa Grok para reconstrucción completa o agrega lógica manual';
       document.getElementById("output").value = reconstructed;
-      updateHighlight("output-highlight", reconstructed);
       setStatus("Reconstrucción básica desde log ✓", "cyan");
     }
 
     function detectType() {
-      syncEditors();
       const code = document.getElementById("input").value.trim();
       if (!code) return setStatus("Nada para detectar", "gray");
       let type = "Desconocido";
@@ -517,21 +482,18 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
     }
 
     function deobfLuaObfuscator() {
-      syncEditors();
       let code = document.getElementById("input").value;
       if (!code) return setStatus("Nada para procesar", "red");
 
-      code = code.replace(/string\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
-      code = code.replace(/string\.char\s*\(\s*(\d+(?:,\s*\d+)*)\s*\)/g, (_, n) => JSON.stringify(String.fromCharCode(...n.split(',').map(Number))));
+      code = code.replace(/string\.char\s*\(\s*table\.unpack\s*\(\s*\{([\d\s,]+)\}\s*\)\s*\)/g, (_, nums) => JSON.stringify(String.fromCharCode(...nums.split(',').map(Number))));
+      code = code.replace(/string\.char\s*\(\s*(\d+(?:,\s*\d+)*)\s*\)/g, (_, nums) => JSON.stringify(String.fromCharCode(...nums.split(',').map(Number))));
 
       document.getElementById("output").value = code;
-      updateHighlight("output-highlight", code);
       beautify();
       setStatus("LuaObfuscator strings desencriptadas ✓", "blue");
     }
 
     function deobfPrometheus() {
-      syncEditors();
       let code = document.getElementById("input").value;
       if (!code) return setStatus("Nada para procesar", "red");
 
@@ -539,42 +501,40 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
       code = code.replace(/if\s+(getfenv|debug\.getinfo|synapse|krnl|identifyexecutor)[^\n]*\n?/g, '-- [ANTI-DEBUG REMOVIDO]\n');
 
       document.getElementById("output").value = code;
-      updateHighlight("output-highlight", code);
       beautify();
       setStatus("Prometheus/WeAreDevs limpieza básica ✓", "rose");
     }
 
     function deobfAll() {
-      syncEditors();
       const code = document.getElementById("input").value.trim();
       if (!code) return setStatus("Ingresa código primero", "red");
 
-      if (/LuaObfuscator|string\.char|table\.unpack/.test(code)) deobfLuaObfuscator();
-      else deobfPrometheus();
-
+      if (/LuaObfuscator|string\.char|table\.unpack/.test(code)) {
+        deobfLuaObfuscator();
+      } else {
+        deobfPrometheus();
+      }
       beautify();
       setStatus("Deobf automático completado 🔥", "violet");
     }
 
     function copyOutput() {
-      syncEditors();
       const out = document.getElementById("output").value.trim();
       if (!out) return setStatus("Nada para copiar", "gray");
 
       navigator.clipboard.writeText(out)
         .then(() => setStatus("Copiado al portapapeles ✓", "emerald"))
-        .catch(() => setStatus("Error al copiar", "red"));
+        .catch(() => setStatus("Error al copiar (permisos?)", "red"));
     }
 
     function sendToGrok() {
-      syncEditors();
       let text = document.getElementById("output").value.trim();
       if (!text) return setStatus("No hay contenido", "red");
 
       const isLog = text.includes(' = ') && (text.includes('Instance.new') || text.includes('game:GetService'));
       let prompt = isLog 
-        ? `ENV LOG de Cypher Logger. Reconstruye script limpio, renombra vars lógicas, organiza, comenta.\n\nLog:\n\`\`\`lua\n${text}\n\`\`\``
-        : `Deobfusca script Lua pre-procesado. Renombra, quita junk, arregla flujo.\n\nCódigo:\n\`\`\`lua\n${text}\n\`\`\``;
+        ? `ENV LOG de Cypher Logger (WeAreDevs/Prometheus). Reconstruye script limpio, renombra vars lógicas, organiza, comenta.\n\nLog:\n\`\`\`lua\n${text}\n\`\`\``
+        : `Deobfusca script Lua pre-procesado. Renombra vars, quita junk, arregla flujo.\n\nCódigo:\n\`\`\`lua\n${text}\n\`\`\``;
 
       navigator.clipboard.writeText(prompt)
         .then(() => {
@@ -587,14 +547,36 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
     function clearAll() {
       document.getElementById("input").value = "";
       document.getElementById("output").value = "";
-      updateHighlight("input-highlight", "");
-      updateHighlight("output-highlight", "");
       setStatus("Todo limpio", "gray");
     }
 
+    // Importar archivo
+    document.getElementById("fileInput").addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        setStatus("Archivo muy grande (máx 5 MB)", "red");
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        document.getElementById("input").value = text;
+        setStatus(`Archivo importado: ${file.name} ✓`, "violet");
+      } catch (err) {
+        setStatus("Error al leer archivo", "red");
+      } finally {
+        e.target.value = "";
+      }
+    });
+
     // Drag & Drop
     const dropzone = document.getElementById('input-dropzone');
-    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
     dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
     dropzone.addEventListener('drop', e => {
       e.preventDefault();
@@ -603,17 +585,12 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")
       if (file) {
         const reader = new FileReader();
         reader.onload = ev => {
-          document.getElementById('input').value = ev.target.result;
-          updateHighlight('input-highlight', ev.target.result);
+          document.getElementById("input").value = ev.target.result;
           setStatus(`Arrastrado: ${file.name} ✓`, "violet");
         };
         reader.readAsText(file);
       }
     });
-
-    // Inicial
-    updateHighlight("input-highlight", "");
-    updateHighlight("output-highlight", "");
   </script>
 </body>
 </html>
