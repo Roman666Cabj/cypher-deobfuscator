@@ -113,14 +113,26 @@
     }
 
     // ==============================================
-    // ENV LOGGER MEJORADO (inspirado en Dumper + V2)
+    // ENV LOGGER MEJORADO (tu versión + mejoras)
     // ==============================================
-    const ENV_LOGGER = `print("[genv logger by Cypher Scripts - Enhanced]")
+    const ENV_LOGGER = `print("[genv logger by Cypher Scripts - Enhanced 2026]")
 
 -- Inicializa el archivo de log con servicios comunes
 writefile('logged.txt', [[
 -- Cypher Logger - Registro de todas las llamadas API
 -- Generado el ]] .. os.date("%Y-%m-%d %H:%M:%S") .. [[
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local LocalizationService = game:GetService("LocalizationService")
+local WebSocketService = game:GetService("WebSocketService")
+local WebSocketClient = game:GetService("WebSocketClient")
+local GameSettings = game:GetService("GameSettings")
+-- Puedes agregar más services manualmente si el script los requiere
+]])
 
 local function isuilib()
     local a = debug.traceback()
@@ -223,7 +235,7 @@ local function log(upvals, ...)
 end
 
 -- ==============================================
--- HOOKS (mismo que tenías, pero con pequeños fixes de robustez)
+-- HOOKS (completo y robusto)
 -- ==============================================
 
 isfunctionhooked = nil
@@ -320,7 +332,7 @@ Instance.new = newcclosure(function(name, parent)
     return oldInstanceNew(name, parent)
 end)
 
--- Metamethods hooks (mismo que tenías, pero con mejor manejo de errores)
+-- Metamethods hooks
 local mt = getrawmetatable(game)
 local oldIndex = clonefunction(mt.__index)
 local oldNamecall = clonefunction(mt.__namecall)
@@ -374,7 +386,8 @@ print = newcclosure(function(...)
 end)
 
 print("[Logger] Ejecutando loadstring del usuario...")
-print("[Logger] Todas las llamadas API se loguearán en logged.txt")`;
+print("[Logger] Todas las llamadas API se loguearán en logged.txt")
+`;
 
     // ==============================================
     // FUNCIONES FUSIONADAS
@@ -475,7 +488,6 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")`;
       let logText = document.getElementById("output").value.trim();
       if (!logText) return setStatus("Pega un log primero", "red");
 
-      // Simple reconstrucción: extraer prints y loadstring del log
       let reconstructed = '-- Reconstruido aproximado desde log\n';
       const lines = logText.split('\n');
       lines.forEach(line => {
@@ -483,7 +495,7 @@ print("[Logger] Todas las llamadas API se loguearán en logged.txt")`;
           const match = line.match(/print\("([^"]+)"\)/);
           if (match) reconstructed += `print("${match[1]}")\n`;
         }
-        if (line.includes('LOADSTRING')) {
+        if (line.includes('LOADSTRING') || line.includes('loadstring')) {
           reconstructed += '-- Loadstring detectado en log\n';
         }
       });
