@@ -1,82 +1,197 @@
-import time as T, os as O, logging as L, requests as R, random as E, pystyle as P
-import base64
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cypher WebHook Tool</title>
 
-def IXIXIXTHWISHGEWHCLEARANDPRINTTHETERMINALSCREENFORWEBSERVICEINTERACTIONPURPOSES(): 
-    O.system('cls' if O.name=='nt' else 'clear')
+<style>
 
-def XXYYYZZZZGETWEBSERVICEWITHGIVENURLANDRETURNJSONIFSTATUSOKANDVALIDATESIFNOTNONE(W): 
-    return R.get(W).json() if R.get(W).status_code==200 else None
+body{
+background:#07060c;
+color:white;
+font-family:Arial;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
 
-def ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES(P): 
-    return str(input(f"{P} > "))
+.container{
+background:#0f0c18;
+border:1px solid #7a42ff;
+padding:30px;
+width:420px;
+border-radius:12px;
+box-shadow:0 0 25px #5e2eff;
+}
 
-def QQWWEEPRINTMENUOPTIONSWITHRAINBOWCOLORANDNUMBERINGFORUSERSELECTION(): 
-    options = ["Spam", "Delete", "Change Name", "One Message", "Check Status", "Exit"]
-    for i, o in enumerate(options, 1):
-        P.Write.Print(f"\n[{i}] {o}", P.Colors.rainbow)  
+h1{
+text-align:center;
+color:#cba6ff;
+margin-bottom:25px;
+}
 
-def XXYYWWSPAMWEBSERVICEWITHMESSAGEWITHTIMEDELAYANDLOGGINGOFRESULTS(W, M): 
-    while True: 
-        RR = R.post(W, json={'content': M}, headers={'Content-Type': 'application/json'})
-        if RR.status_code == 204: XXYYWWSUCCESSMESSAGE(); T.sleep(E.uniform(0.5, 1.5))
+input,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+margin-bottom:15px;
+background:#0a0913;
+border:1px solid #5a2ad9;
+color:white;
+border-radius:6px;
+}
 
-def YYXXWWDELETEWEBSERVICEWITHGIVENURLANDLOGRESULTSOFDELETIONPROCESS(W): 
-    if R.delete(W).status_code == 204: YYXXWWSUCCESSMESSAGE()
+button{
+width:100%;
+padding:10px;
+margin-top:8px;
+background:#7a42ff;
+border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
 
-def ZZYYXXCHANGEWEBSERVICENAMEWITHNEWNAMEANDLOGRESULTSOFNAMECHANGEPROCESS(W, N): 
-    RR = R.patch(W, json={"name": N}, headers={'Content-Type': 'application/json'})
-    if RR.status_code == 200: ZZYYXXSUCCESSMESSAGE()
-    else: L.error(f"Failed to Change Name. Status Code: {RR.status_code}")
+button:hover{
+background:#9a6dff;
+}
 
-def YYWWZZSENDONETIMEWEBSERVICEMESSAGEANDLOGRESULTS(W, M): 
-    RR = R.post(W, json={'content': M}, headers={'Content-Type': 'application/json'})
-    if RR.status_code == 204: YYWWZZSUCCESSMESSAGE()
+.row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
 
-def YYXXZZCHECKWEBSERVICESTATUSWITHGIVENURLANDLOGRESULTSOFWEBSERVICECHECK(W): 
-    RR = R.get(W)
-    if RR.status_code == 200: YYXXZZSUCCESSMESSAGE()
-    else: L.warning("Webhook Not Found." if RR.status_code == 404 else f"Unknown Error Occurred. Status Code: {RR.status_code}")
+.log{
+margin-top:15px;
+background:#05040a;
+padding:10px;
+height:120px;
+overflow:auto;
+font-size:13px;
+border:1px solid #4a2aa6;
+}
 
-def XXYYWWSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully sent message.", P.Colors.rainbow)
+</style>
+</head>
 
-def YYXXWWSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully deleted.", P.Colors.rainbow)
+<body>
 
-def ZZYYXXSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully changed name.", P.Colors.rainbow)
+<div class="container">
 
-def YYWWZZSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully sent one-time message.", P.Colors.rainbow)
+<h1>Cypher WebHook Tool</h1>
 
-def YYXXZZSUCCESSMESSAGE(): 
-    P.Write.Print("Webhook is active.", P.Colors.rainbow)
+<input id="webhook" placeholder="Webhook URL">
 
-def OOOOOOOOOOOOOOCLEARSCREENANDINITIALIZEWEBHOOKURLINPUTPROMPTANDLOGRESULTS(): 
+<textarea id="message" placeholder="Message"></textarea>
 
-    IXIXIXTHWISHGEWHCLEARANDPRINTTHETERMINALSCREENFORWEBSERVICEINTERACTIONPURPOSES()
-    XXAXXIXXXZXXEXXRRRXXXXXX1FTGUYHKJHKGSFDJTEGBHEDNJAHKGJEFTKGBYRHEDNJ()  
-    W = ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("\nEnter Webhook URL")
-    L.info(f"Webhook URL Entered: {W}")
-    A = XXYYYZZZZGETWEBSERVICEWITHGIVENURLANDRETURNJSONIFSTATUSOKANDVALIDATESIFNOTNONE(W)
-    if A: L.info(f"Webhook Name Retrieved: {A['name']}")
-    while True: 
-        IXIXIXTHWISHGEWHCLEARANDPRINTTHETERMINALSCREENFORWEBSERVICEINTERACTIONPURPOSES()
-        XXAXXIXXXZXXEXXRRRXXXXXX1FTGUYHKJHKGSFDJTEGBHEDNJAHKGJEFTKGBYRHEDNJ()  
-        QQWWEEPRINTMENUOPTIONSWITHRAINBOWCOLORANDNUMBERINGFORUSERSELECTION()
-        X = int(ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("\n>>> "))
-        if X not in range(1, 7): L.error("Invalid Choice Made. Please Try Again."); T.sleep(2); continue
-        if X == 1: XXYYWWSPAMWEBSERVICEWITHMESSAGEWITHTIMEDELAYANDLOGGINGOFRESULTS(W, ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("Content: "))
-        if X == 2: YYXXWWDELETEWEBSERVICEWITHGIVENURLANDLOGRESULTSOFDELETIONPROCESS(W)
-        if X == 3: ZZYYXXCHANGEWEBSERVICENAMEWITHNEWNAMEANDLOGRESULTSOFNAMECHANGEPROCESS(W, ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("Name: "))
-        if X == 4: YYWWZZSENDONETIMEWEBSERVICEMESSAGEANDLOGRESULTS(W, ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("Content: "))
-        if X == 5: YYXXZZCHECKWEBSERVICESTATUSWITHGIVENURLANDLOGRESULTSOFWEBSERVICECHECK(W)
-        if X == 6: break
-        T.sleep(E.uniform(0.5, 1.5))
+<input id="name" placeholder="New Name">
 
-def XXAXXIXXXZXXEXXRRRXXXXXX1FTGUYHKJHKGSFDJTEGBHEDNJAHKGJEFTKGBYRHEDNJ(): 
-    TVYGBHENJFRRTVFRASDGTYBUHKNBGBRFT = base64.b64decode("aHR0cHM6Ly9kaXNjb3JkLmdnL3Byb2dyYW1tZXIgfCBAYWFzdGV0aWMuYWl6ZXI=").decode('utf-8')
-    P.Write.Print(TVYGBHENJFRRTVFRASDGTYBUHKNBGBRFT, P.Colors.rainbow)
+<div class="row">
 
-if __name__ == "__main__": 
-    OOOOOOOOOOOOOOCLEARSCREENANDINITIALIZEWEBHOOKURLINPUTPROMPTANDLOGRESULTS()
+<button onclick="sendMessage()">Send</button>
+<button onclick="spam()">Spam</button>
+
+<button onclick="deleteWebhook()">Delete</button>
+<button onclick="changeName()">Change Name</button>
+
+<button onclick="check()">Check Status</button>
+<button onclick="stopSpam()">Stop Spam</button>
+
+</div>
+
+<div class="log" id="log"></div>
+
+</div>
+
+<script>
+
+let spamInterval = null
+
+function log(t){
+document.getElementById("log").innerHTML += t+"<br>"
+}
+
+async function sendMessage(){
+
+const w = document.getElementById("webhook").value
+const m = document.getElementById("message").value
+
+let r = await fetch(w,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({content:m})
+})
+
+if(r.status==204) log("Message sent")
+
+}
+
+function spam(){
+
+const w = document.getElementById("webhook").value
+const m = document.getElementById("message").value
+
+spamInterval = setInterval(async()=>{
+
+let r = await fetch(w,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({content:m})
+})
+
+if(r.status==204) log("Spam message sent")
+
+},800)
+
+}
+
+function stopSpam(){
+clearInterval(spamInterval)
+log("Spam stopped")
+}
+
+async function deleteWebhook(){
+
+const w = document.getElementById("webhook").value
+
+let r = await fetch(w,{method:"DELETE"})
+
+if(r.status==204) log("Webhook deleted")
+
+}
+
+async function changeName(){
+
+const w = document.getElementById("webhook").value
+const n = document.getElementById("name").value
+
+let r = await fetch(w,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name:n})
+})
+
+if(r.status==200) log("Name changed")
+
+}
+
+async function check(){
+
+const w = document.getElementById("webhook").value
+
+let r = await fetch(w)
+
+if(r.status==200) log("Webhook active")
+else if(r.status==404) log("Webhook not found")
+else log("Error "+r.status)
+
+}
+
+</script>
+
+</body>
+</html>
