@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Cypher WebHook Tool</title>
@@ -7,72 +7,102 @@
 <style>
 
 body{
-background:#07060c;
+background:#05040a;
 color:white;
 font-family:Arial;
+margin:0;
 display:flex;
 justify-content:center;
 align-items:center;
 height:100vh;
-margin:0;
 }
 
-.container{
-background:#0f0c18;
-border:1px solid #7a42ff;
-padding:30px;
-width:420px;
-border-radius:12px;
-box-shadow:0 0 25px #5e2eff;
+.panel{
+
+width:95%;
+max-width:420px;
+background:#0b0914;
+border:1px solid #6b39ff;
+border-radius:14px;
+padding:20px;
+box-shadow:0 0 30px #5e2eff;
+text-align:center;
+
 }
 
 h1{
-text-align:center;
 color:#cba6ff;
-margin-bottom:25px;
+margin-bottom:20px;
 }
 
 input,textarea{
+
 width:100%;
 padding:10px;
 margin-top:10px;
-margin-bottom:15px;
-background:#0a0913;
+background:#070610;
 border:1px solid #5a2ad9;
 color:white;
 border-radius:6px;
+
 }
 
 button{
+
 width:100%;
 padding:10px;
-margin-top:8px;
+margin-top:10px;
 background:#7a42ff;
 border:none;
 color:white;
 border-radius:6px;
-cursor:pointer;
 font-weight:bold;
+
 }
 
 button:hover{
+
 background:#9a6dff;
+
 }
 
-.row{
+.grid{
+
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:10px;
+
+}
+
+.info{
+
+margin-top:15px;
+padding:10px;
+background:#06050b;
+border:1px solid #4a2aa6;
+border-radius:6px;
+font-size:13px;
+
+}
+
+.avatar{
+
+width:70px;
+height:70px;
+border-radius:50%;
+margin-bottom:10px;
+
 }
 
 .log{
-margin-top:15px;
-background:#05040a;
-padding:10px;
-height:120px;
+
+margin-top:10px;
+height:100px;
 overflow:auto;
-font-size:13px;
+background:#030207;
 border:1px solid #4a2aa6;
+padding:6px;
+
 }
 
 </style>
@@ -80,50 +110,96 @@ border:1px solid #4a2aa6;
 
 <body>
 
-<div class="container">
+<div class="panel">
 
 <h1>Cypher WebHook Tool</h1>
 
-<input id="webhook" placeholder="Webhook URL">
+<div id="login">
+
+<input id="webhook" placeholder="Enter WebHook URL">
+<button onclick="loadWebhook()">Load WebHook</button>
+
+</div>
+
+<div id="tool" style="display:none">
+
+<img id="avatar" class="avatar">
+
+<div class="info" id="info"></div>
 
 <textarea id="message" placeholder="Message"></textarea>
 
-<input id="name" placeholder="New Name">
+<div class="grid">
 
-<div class="row">
-
-<button onclick="sendMessage()">Send</button>
+<button onclick="send()">Send</button>
 <button onclick="spam()">Spam</button>
 
 <button onclick="deleteWebhook()">Delete</button>
 <button onclick="changeName()">Change Name</button>
 
-<button onclick="check()">Check Status</button>
-<button onclick="stopSpam()">Stop Spam</button>
+<button onclick="changeAvatar()">Avatar</button>
+<button onclick="check()">Check</button>
 
 </div>
+
+<button onclick="stopSpam()">Stop Spam</button>
 
 <div class="log" id="log"></div>
 
 </div>
 
+</div>
+
 <script>
 
-let spamInterval = null
+let webhook = ""
+let spamLoop = null
 
 function log(t){
+
 document.getElementById("log").innerHTML += t+"<br>"
+
 }
 
-async function sendMessage(){
+async function loadWebhook(){
 
-const w = document.getElementById("webhook").value
-const m = document.getElementById("message").value
+webhook = document.getElementById("webhook").value
 
-let r = await fetch(w,{
+let r = await fetch(webhook)
+
+if(r.status !== 200){
+
+alert("Webhook invalid")
+return
+
+}
+
+let data = await r.json()
+
+document.getElementById("login").style.display="none"
+document.getElementById("tool").style.display="block"
+
+document.getElementById("avatar").src =
+"https://cdn.discordapp.com/avatars/"+data.id+"/"+data.avatar+".png"
+
+document.getElementById("info").innerHTML =
+
+"Name: "+data.name+"<br>"+
+"Webhook ID: "+data.id+"<br>"+
+"Channel ID: "+data.channel_id
+
+}
+
+async function send(){
+
+let m = document.getElementById("message").value
+
+let r = await fetch(webhook,{
+
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({content:m})
+
 })
 
 if(r.status==204) log("Message sent")
@@ -132,62 +208,116 @@ if(r.status==204) log("Message sent")
 
 function spam(){
 
-const w = document.getElementById("webhook").value
-const m = document.getElementById("message").value
+let count = prompt("How many messages?")
 
-spamInterval = setInterval(async()=>{
+let m = document.getElementById("message").value
 
-let r = await fetch(w,{
+let sent = 0
+
+spamLoop = setInterval(async()=>{
+
+if(sent>=count){
+
+clearInterval(spamLoop)
+log("Spam finished")
+return
+
+}
+
+let r = await fetch(webhook,{
+
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({content:m})
+
 })
 
-if(r.status==204) log("Spam message sent")
+if(r.status==204){
 
-},800)
+sent++
+log("Sent "+sent)
+
+}
+
+},700)
 
 }
 
 function stopSpam(){
-clearInterval(spamInterval)
+
+clearInterval(spamLoop)
 log("Spam stopped")
+
 }
 
 async function deleteWebhook(){
 
-const w = document.getElementById("webhook").value
+if(!confirm("Delete webhook?")) return
 
-let r = await fetch(w,{method:"DELETE"})
+let r = await fetch(webhook,{method:"DELETE"})
 
-if(r.status==204) log("Webhook deleted")
+if(r.status==204){
+
+log("Webhook deleted")
+
+}
 
 }
 
 async function changeName(){
 
-const w = document.getElementById("webhook").value
-const n = document.getElementById("name").value
+let name = prompt("New name")
 
-let r = await fetch(w,{
+if(!name) return
+
+let r = await fetch(webhook,{
+
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({name:n})
+body:JSON.stringify({name:name})
+
 })
 
 if(r.status==200) log("Name changed")
 
 }
 
+async function changeAvatar(){
+
+let url = prompt("Avatar Image URL")
+
+if(!url) return
+
+let base64 = await fetch(url).then(r=>r.blob()).then(blob=>{
+
+return new Promise(resolve=>{
+
+let reader = new FileReader()
+reader.onload = ()=>resolve(reader.result)
+reader.readAsDataURL(blob)
+
+})
+
+})
+
+let r = await fetch(webhook,{
+
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({avatar:base64})
+
+})
+
+if(r.status==200) log("Avatar changed")
+
+}
+
 async function check(){
 
-const w = document.getElementById("webhook").value
-
-let r = await fetch(w)
+let r = await fetch(webhook)
 
 if(r.status==200) log("Webhook active")
-else if(r.status==404) log("Webhook not found")
-else log("Error "+r.status)
+else log("Webhook invalid")
 
 }
 
